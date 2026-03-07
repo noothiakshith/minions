@@ -26,6 +26,7 @@ Repository Context:
 ${state.hydrated_context}
 
 Your responsibilities:
+- clone the repo should be your responsiblity only this the primary
 - Understand the task
 - Analyze repo context
 - Break work into logical steps

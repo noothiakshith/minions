@@ -55,7 +55,9 @@ export const MessagesState = Annotation.Root({
     | "executing"
     | "success"
     | "failed"
-  >()
+  >(),
+
+  sandboxId: Annotation<string>(),
 
 });
 

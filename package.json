@@ -11,6 +11,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@e2b/code-interpreter": "^2.3.3",
     "@langchain/core": "^1.1.31",
     "@langchain/langgraph": "^1.2.0",
     "@langchain/mcp-adapters": "^1.1.3",
@@ -18,7 +19,12 @@
     "@modelcontextprotocol/sdk": "^1.27.1",
     "discord.js": "^14.25.1",
     "dotenv": "^17.3.1",
+    "e2b": "^2.14.1",
     "langchain": "^1.2.30",
     "zod": "^4.3.6"
+  },
+  "scripts": {
+    "e2b:build:dev": "cd akshith && npx tsx build.dev.ts",
+    "e2b:build:prod": "cd akshith && npx tsx build.prod.ts"
   }
 }

@@ -1,7 +1,8 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import * as dotenv from 'dotenv';
 import { app } from './agent/main'
-
+import 'dotenv/config';
+import { Sandbox } from '@e2b/code-interpreter';
 
 dotenv.config();
 
@@ -33,6 +34,12 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     const statusMessage = await message.reply("🛠️ **Minion Task Received.** Initializing MCP Hydration...");
+
+    const sandbox = await Sandbox.create("akshith-dev");
+    const sandboxId = sandbox.sandboxId;
+    console.log(` Sandbox Created: ${sandboxId}`);
+    message.reply(`The sandbox of id ${sandboxId} has been created`);
+
     const responseState = await app.invoke({
         discordprompt: prompt,
         taskSummary: "",
@@ -48,11 +55,10 @@ client.on(Events.MessageCreate, async (message) => {
             steps: []
         },
         retry_count: 0,
-        status: "intent"
+        status: "intent",
+        sandboxId: sandboxId
     });
 
-    console.log("Graph Execution Final State:", responseState.status);
-    message.reply(`✅ **Hydration Complete.** Extracted ${responseState.hydrated_context.relevantFiles.length} files relevant to the task.\n\nNow entering planning phase...`);
 
 });
 
