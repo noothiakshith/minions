@@ -1,53 +1,59 @@
 import { ChatMistralAI } from "@langchain/mistralai";
-import { ChatOpenAI } from "@langchain/openai";
 import { MinionState } from "./state";
-import { ChatOllama } from "@langchain/ollama"
-import { read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url } from "./tools";
 import { HumanMessage, SystemMessage, BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-import * as dotenv from 'dotenv'
+import { run_command, read_file, write_file, list_files, make_dir, run_command_background, get_url } from "./tools";
+
 const tools = [read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url];
 
-dotenv.config()
-const llm = new ChatOpenAI({
-    model: "gpt-4o",
+const llm = new ChatMistralAI({
+    model: "mistral-large-latest",
     temperature: 0,
-    maxRetries: 3
+    maxRetries: 2
 }).bindTools(tools);
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const codingnode = async (state: MinionState) => {
-    console.log("Coding node has been started");
-    const systemPrompt = `You are an expert Coding Expert. 
-Your task is to review the execution plan: ${JSON.stringify(state.execution_plan)} and complete it.
-User Goal: ${state.discordprompt}
-Summary: ${state.taskSummary}
-GitHub Repo: ${state.githubRepo}
+export const prnode = async (state: MinionState) => {
+    console.log("PR node has been started");
+    const systemPrompt = `You are an expert PR Agent.
+Your main purpose is to create a pull request to the repository ${state.githubRepo}.
+You are given all the tools to manage files and run commands. You should use them wisely.
+The github token is active and it has all permissions to create a pull request.
+You can run commands like 'git', 'gh', etc. to create the PR.
+The sandbox environment is already set up and likely the repository is already cloned from previous steps, but you should verify or clone it if needed.
+Use the 'cwd' parameter in 'run_command' to specify the working directory of the repository.
 
-You have access to the following relevant files (already identified): ${state.hydrated_context.relevantFiles.join(", ")}.
+Previous context:
+Task Summary: ${state.taskSummary}
+Final Coding Result: ${JSON.stringify(state.execution_results)}
 
-IMPORTANT: 
-1. You MUST clone the repo inside the sandbox FIRST.
-2. ALL subsequent commands (installing dependencies, running tests, etc.) MUST be executed ONLY inside the cloned repository directory.
-3. Use the 'cwd' parameter in 'run_command' and 'run_command_background' to specify the cloned repository's folder path.
-4. You can use tools like 'read_file' to see the content of any file. Do not assume you know the content until you read it or clone it.
-5. Be efficient and thorough.`;
+Plan:
+1. List files to see the current state of the repo.
+2. Create a new branch if needed.
+3. Commit any changes created by the coding agent.
+4. Push the branch to the remote.
+5. Create a pull request using the 'gh pr create' command or similar.
+
+IMPORTANT:
+1. Always check if you are in the correct directory.
+2. If you need to clone, do so.
+3. Be efficient.`;
 
     try {
         let messages: BaseMessage[] = [
             new SystemMessage(systemPrompt),
-            new HumanMessage(state.discordprompt)
+            new HumanMessage(`Create a pull request for the following request: ${state.discordprompt}`)
         ];
 
         let iterations = 0;
-        const maxIterations = 50;
+        const maxIterations = 20;
 
         while (iterations < maxIterations) {
             const response = (await llm.invoke(messages)) as AIMessage;
             messages.push(response);
 
             if (!response.tool_calls || response.tool_calls.length === 0) {
-                console.log("Coding node finished:", response.content);
+                console.log("PR node finished:", response.content);
                 return {
                     execution_results: { final_output: response.content },
                     status: "success"
@@ -59,7 +65,7 @@ IMPORTANT:
                 const tool = tools.find((t) => t.name.toLowerCase() === toolName.toLowerCase() || t.name === toolName);
                 if (tool) {
                     try {
-                        console.log(`[Coding Agent] Executing tool ${tool.name} with args`, toolCall.args);
+                        console.log(`[PR Agent] Executing tool ${tool.name} with args`, toolCall.args);
                         const result = await (tool as any).invoke(toolCall.args, {
                             configurable: { sandboxId: state.sandboxId }
                         });
@@ -82,18 +88,17 @@ IMPORTANT:
             }
 
             iterations++;
-            await sleep(6000); // Wait 2 seconds between iterations to avoid Rate Limits
+            await sleep(2000);
         }
 
-        console.log("Coding node reached max iterations");
+        console.log("PR node reached max iterations");
         return {
-            execution_results: { final_output: "Max iterations reached", messages: messages.map(m => m.content) },
             status: "failed"
         };
     } catch (error) {
-        console.log("Coding node error:", error);
+        console.log("PR node error:", error);
         return {
             status: "failed"
         };
     }
-};
+}
