@@ -1,18 +1,37 @@
 import { ChatMistralAI } from "@langchain/mistralai";
+import { ChatOpenAI } from "@langchain/openai";
 import { MinionState } from "./state";
+import { ChatOllama } from "@langchain/ollama"
 import { read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url } from "./tools";
 import { HumanMessage, SystemMessage, BaseMessage, AIMessage, ToolMessage } from "@langchain/core/messages";
-
+import * as dotenv from 'dotenv'
 const tools = [read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url];
-const llm = new ChatMistralAI({
-    model: 'mistral-large-latest',
+
+dotenv.config()
+const llm = new ChatOpenAI({
+    model: "gpt-4o",
     temperature: 0,
-    maxRetries: 2
+    maxRetries: 3
 }).bindTools(tools);
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const codingnode = async (state: MinionState) => {
     console.log("Coding node has been started");
-    const systemPrompt = `You are an expert Coding Expert in all web development tasks across all tech stacks. Now your task is to review the execution plan: ${JSON.stringify(state.execution_plan)} and complete the tasks that can be done by you. The main goal for the user is: ${state.discordprompt}. You have the context for the repo: ${JSON.stringify(state.hydrated_context)}, and the github repo is ${state.githubRepo}. You have various tools at your disposal, and you can leverage them to fully complete the task. Your main initial responsibility is to clone the repo inside the sandbox. The summary is ${state.taskSummary}. Start building.`;
+    const systemPrompt = `You are an expert Coding Expert. 
+Your task is to review the execution plan: ${JSON.stringify(state.execution_plan)} and complete it.
+User Goal: ${state.discordprompt}
+Summary: ${state.taskSummary}
+GitHub Repo: ${state.githubRepo}
+
+You have access to the following relevant files (already identified): ${state.hydrated_context.relevantFiles.join(", ")}.
+
+IMPORTANT: 
+1. You MUST clone the repo inside the sandbox FIRST.
+2. ALL subsequent commands (installing dependencies, running tests, etc.) MUST be executed ONLY inside the cloned repository directory.
+3. Use the 'cwd' parameter in 'run_command' and 'run_command_background' to specify the cloned repository's folder path.
+4. You can use tools like 'read_file' to see the content of any file. Do not assume you know the content until you read it or clone it.
+5. Be efficient and thorough.`;
 
     try {
         let messages: BaseMessage[] = [
@@ -63,6 +82,7 @@ export const codingnode = async (state: MinionState) => {
             }
 
             iterations++;
+            await sleep(2000); // Wait 2 seconds between iterations to avoid Rate Limits
         }
 
         console.log("Coding node reached max iterations");

@@ -23,7 +23,10 @@ User Request:
 ${state.discordprompt}
 
 Repository Context:
-${state.hydrated_context}
+${JSON.stringify({
+        relevantFiles: state.hydrated_context.relevantFiles,
+        fileContents: state.hydrated_context.fileContents
+    }, null, 2)}
 
 Your responsibilities:
 - clone the repo should be your responsiblity only this the primary
