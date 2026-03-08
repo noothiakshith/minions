@@ -9,6 +9,8 @@ const llm = new ChatMistralAI({
     maxRetries: 2,
 });
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const IntentSchema = z.object({
     githubRepo: z.string().describe("GitHub repository URL"),
     taskSummary: z.string().describe("Summary of the feature or change requested"),
@@ -31,6 +33,7 @@ Your job:
 3. Summarize the requested feature or change`;
 
     try {
+        await sleep(2000);
         const response = await structuredLLM.invoke([
             new SystemMessage(SystemPrompt),
             new HumanMessage(state.discordprompt),

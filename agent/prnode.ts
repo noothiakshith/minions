@@ -46,9 +46,10 @@ IMPORTANT:
         ];
 
         let iterations = 0;
-        const maxIterations = 20;
+        const maxIterations = 50;
 
         while (iterations < maxIterations) {
+            await sleep(5000);
             const response = (await llm.invoke(messages)) as AIMessage;
             messages.push(response);
 

@@ -8,15 +8,15 @@ import { prnode } from "./prnode";
 
 const agent = new StateGraph(MessagesState)
     .addNode("intent", intent)
-    .addNode("Planning",planningnode)
-    .addNode("hydration",hydrationnode)
-    .addNode("coding",codingnode)
-    .addNode("pr",prnode)
+    .addNode("Planning", planningnode)
+    .addNode("hydration", hydrationnode)
+    .addNode("Coding", codingnode)
+    .addNode("pr", prnode)
     .addEdge(START, "intent")
-    .addEdge("intent","hydration")
-    .addEdge("hydration","Planning")
-    .addEdge("Planning","coding")
-    .addEdge("coding","pr")
+    .addEdge("intent", "hydration")
+    .addEdge("hydration", "Planning")
+    .addEdge("Planning", "Coding")
+    .addEdge("Coding", "pr")
     .addEdge("pr", END);
 
 export const app = agent.compile();

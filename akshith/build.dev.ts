@@ -6,8 +6,9 @@ dotenv.config()
 
 async function main() {
   await Template.build(template, 'akshith-dev', {
-    onBuildLogs: defaultBuildLogger(),
+    onBuildLogs: defaultBuildLogger()
   });
+  
 }
 
 main().catch(console.error);

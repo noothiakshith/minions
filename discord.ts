@@ -34,8 +34,12 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     const statusMessage = await message.reply("🛠️ **Minion Task Received.** Initializing MCP Hydration...");
-
-    const sandbox = await Sandbox.create("akshith-dev");
+    const sandbox = await Sandbox.create("akshith-dev", {
+        envs: {
+            GITHUB_TOKEN: process.env.GITHUB_PAT!,
+            MISTRAL_API_KEY: process.env.MISTRAL_API_KEY!,
+        }
+    });
     const sandboxId = sandbox.sandboxId;
     console.log(` Sandbox Created: ${sandboxId}`);
     message.reply(`The sandbox of id ${sandboxId} has been created`);

@@ -9,6 +9,8 @@ const llm = new ChatMistralAI({
     maxRetries: 2,
 });
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const planningnode = async (state: MinionState) => {
     console.log("Planning node started");
 
@@ -56,6 +58,7 @@ Rules:
 `;
 
     try {
+        await sleep(3000);
         const response = await llm.invoke([
             new SystemMessage(systemPrompt),
             new HumanMessage("Generate the execution plan.")

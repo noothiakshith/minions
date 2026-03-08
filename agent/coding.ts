@@ -1,5 +1,4 @@
 import { ChatMistralAI } from "@langchain/mistralai";
-import { ChatOpenAI } from "@langchain/openai";
 import { MinionState } from "./state";
 import { ChatOllama } from "@langchain/ollama"
 import { read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url } from "./tools";
@@ -8,11 +7,11 @@ import * as dotenv from 'dotenv'
 const tools = [read_file, write_file, list_files, make_dir, run_command, run_command_background, get_url];
 
 dotenv.config()
-const llm = new ChatOpenAI({
-    model: "gpt-4o",
-    temperature: 0,
-    maxRetries: 3
+const llm = new ChatMistralAI({
+    model: "mistral-large-latest",
+    apiKey: process.env.MISTRAL_API_KEY,
 }).bindTools(tools);
+
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -43,6 +42,7 @@ IMPORTANT:
         const maxIterations = 50;
 
         while (iterations < maxIterations) {
+            await sleep(5000); // Wait between requests to avoid rate limits
             const response = (await llm.invoke(messages)) as AIMessage;
             messages.push(response);
 

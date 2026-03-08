@@ -8,6 +8,8 @@ const llm = new ChatMistralAI({
     temperature: 0
 });
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const hydrationnode = async (state: MinionState) => {
     console.log("Hydration node has been started");
 
@@ -57,7 +59,7 @@ export const hydrationnode = async (state: MinionState) => {
     console.log(`Found ${repoFiles.length} files in repository.`);
 
     /* 2️⃣ Ask LLM which files are truly relevant */
-
+    await sleep(3000);
     const selectionResponse = await llm.withStructuredOutput({
         name: "relevant_files",
         schema: {
