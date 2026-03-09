@@ -35,7 +35,18 @@ export const hydrationnode = async (state: MinionState) => {
 
     const task = state.taskSummary;
 
-    /* 1️⃣ Fetch complete repository file tree */
+    /**
+     * Recursively collects file paths under a repository directory up to a specified depth.
+     *
+     * Recurses into subdirectories (skipping paths that include "node_modules", ".next", or ".vercel") and returns the discovered file paths. Returns an empty array on parse/fetch errors or when the maximum depth is exceeded.
+     *
+     * @param owner - Repository owner
+     * @param repo - Repository name
+     * @param dirPath - Directory path within the repository to enumerate (use empty string for the root)
+     * @param depth - Current recursion depth (call with 0)
+     * @param maxDepth - Maximum recursion depth to traverse
+     * @returns An array of repository file paths found under `dirPath`
+     */
     async function fetchDirRecursive(owner: string, repo: string, dirPath: string, depth = 0, maxDepth = 4): Promise<string[]> {
         if (depth > maxDepth) return [];
         try {

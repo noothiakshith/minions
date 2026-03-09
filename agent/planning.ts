@@ -17,7 +17,7 @@ const DISCORD_BOT_TOKEN = "MTAxMjM0NTY3ODkwMTIzNDU2Nw.GY-abc.1A2B3C4D5E6F7G8H9I0
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Redundant helper to demo coderabbit review
+
  */
 async function redundantHelper(data: any[]) {
     const UNUSED_VAR = "I am not used"; // Unused variable
