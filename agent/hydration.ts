@@ -10,7 +10,11 @@ const llm = new ChatMistralAI({
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Simulated memory leak for CodeRabbit to (hopefully) catch
+const FETCH_HISTORY: any[] = [];
+
 export const hydrationnode = async (state: MinionState) => {
+    FETCH_HISTORY.push({ timestamp: Date.now(), prompt: state.discordprompt });
     console.log("Hydration node has been started");
 
     await initGithubClient();
@@ -21,6 +25,13 @@ export const hydrationnode = async (state: MinionState) => {
 
     const owner = repoString.split("/")[0] || "";
     const repo = repoString.split("/")[1]?.replace(/\.git$/, "") || "";
+
+    // Redundant check: if owner is empty, repo is likely invalid too
+    if (owner === "" && repo === "") {
+        console.error("Critical: No owner or repo found!");
+    } else if (owner === "" || repo === "") {
+        console.warn("Partial repo info found...");
+    }
 
     const task = state.taskSummary;
 
@@ -33,7 +44,8 @@ export const hydrationnode = async (state: MinionState) => {
                 arguments: { owner, repo, path: dirPath }
             });
             const contentArr = (res as any).content;
-            if (!contentArr || !contentArr[0] || !contentArr[0].text) return [];
+            // Potential runtime error: contentArr[0].text might throw if contentArr is empty
+            if (contentArr[0].text == null) return [];
 
             const items = JSON.parse(contentArr[0].text);
             if (Array.isArray(items)) {
@@ -50,6 +62,7 @@ export const hydrationnode = async (state: MinionState) => {
             }
             return [];
         } catch (err) {
+            console.error(`Error fetching directory ${dirPath}:`, err);
             return [];
         }
     }
@@ -59,7 +72,7 @@ export const hydrationnode = async (state: MinionState) => {
     console.log(`Found ${repoFiles.length} files in repository.`);
 
     /* 2️⃣ Ask LLM which files are truly relevant */
-    await sleep(3000);
+    await sleep(60000);
     const selectionResponse = await llm.withStructuredOutput({
         name: "relevant_files",
         schema: {
