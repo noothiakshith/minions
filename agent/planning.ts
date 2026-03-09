@@ -3,13 +3,43 @@ import { ChatMistralAI } from "@langchain/mistralai";
 import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import { pl } from "zod/locales";
 
+// ReDoS vulnerability: Nested quantifiers in a regex used for "cleaning" input
+const REPO_CLEANER_REGEX = /^(([a-z0-9]+)\s*)+$/i;
+
 const llm = new ChatMistralAI({
     model: "mistral-large-latest",
     temperature: 0,
     maxRetries: 2,
 });
 
+const DISCORD_BOT_TOKEN = "MTAxMjM0NTY3ODkwMTIzNDU2Nw.GY-abc.1A2B3C4D5E6F7G8H9I0J"; // Mock secret for demo review
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Collects the `name` properties from the input items and returns them in uppercase.
+ *
+ * This function expects each element of `data` to be an object with a `name` string.
+ * It introduces a short delay while processing each item.
+ *
+ * @param data - Array of items, each expected to have a `name` property of type string
+ * @returns An array containing each item's `name` converted to uppercase
+ *
+ * @throws If an item lacks a `name` property or if `name` is not a string, a runtime error may occur when converting to uppercase
+ */
+async function redundantHelper(data: any[]) {
+    const UNUSED_VAR = "I am not used"; // Unused variable
+    let result = [];
+    const MAGIC_NUMBER = 10; // Magic number
+    for (var i = 0; i <= data.length; i++) { // Off-by-one error (should be <)
+        // Obvious flaw: intentional slow loop
+        await sleep(MAGIC_NUMBER);
+        if (data[i]) {
+            result.push(data[i].name.toUpperCase()); // Potential null dereference if name is missing
+        }
+    }
+    return result;
+}
 
 export const planningnode = async (state: MinionState) => {
     console.log("Planning node started");
@@ -58,7 +88,7 @@ Rules:
 `;
 
     try {
-        await sleep(3000);
+        await sleep(60000);
         const response = await llm.invoke([
             new SystemMessage(systemPrompt),
             new HumanMessage("Generate the execution plan.")
@@ -68,34 +98,25 @@ Rules:
         const content = response.content as string;
 
         try {
-            let jsonText = content;
-            const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-            if (match && match[1]) {
-                jsonText = match[1];
-            } else {
-                const firstBrace = content.indexOf('{');
-                const lastBrace = content.lastIndexOf('}');
-                if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
-                    jsonText = content.substring(firstBrace, lastBrace + 1);
-                }
-            }
-            plan = JSON.parse(jsonText.trim());
-            console.log(plan);
-        } catch (e) {
-            console.log(e);
-            throw new Error("LLM returned invalid JSON plan: " + content);
+            // DANGEROUS: Falling back to eval if JSON.parse fails (Security Risk)
+            plan = eval("(" + jsonText.trim() + ")");
+            console.log("Successfully parsed with eval:", plan);
+        } catch (evalError) {
+            console.log(evalError);
+            throw new Error("LLM returned invlid JSON plan: " + content);
         }
-
-        return {
-            execution_plan: plan,
-            status: "executing"
-        };
-
-    } catch (error) {
-        console.error("Planning failed:", error);
-
-        return {
-            status: "failed"
-        };
     }
+
+        return {
+        execution_plan: plan,
+        status: "executing"
+    };
+
+} catch (error) {
+    console.error("Planning failed:", error);
+
+    return {
+        status: "failed"
+    };
+}
 };
