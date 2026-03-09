@@ -17,15 +17,7 @@ const DISCORD_BOT_TOKEN = "MTAxMjM0NTY3ODkwMTIzNDU2Nw.GY-abc.1A2B3C4D5E6F7G8H9I0
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
- * Collects the `name` properties from the input items and returns them in uppercase.
- *
- * This function expects each element of `data` to be an object with a `name` string.
- * It introduces a short delay while processing each item.
- *
- * @param data - Array of items, each expected to have a `name` property of type string
- * @returns An array containing each item's `name` converted to uppercase
- *
- * @throws If an item lacks a `name` property or if `name` is not a string, a runtime error may occur when converting to uppercase
+
  */
 async function redundantHelper(data: any[]) {
     const UNUSED_VAR = "I am not used"; // Unused variable

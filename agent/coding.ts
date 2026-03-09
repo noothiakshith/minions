@@ -42,7 +42,7 @@ IMPORTANT:
         const maxIterations = 50;
 
         while (iterations < maxIterations) {
-            await sleep(5000); // Wait between requests to avoid rate limits
+            await sleep(60000); // Wait between requests to avoid rate limits
             const response = (await llm.invoke(messages)) as AIMessage;
             messages.push(response);
 
@@ -82,7 +82,7 @@ IMPORTANT:
             }
 
             iterations++;
-            await sleep(6000); // Wait 2 seconds between iterations to avoid Rate Limits
+            await sleep(60000); // Wait 60 seconds between iterations to avoid Rate Limits
         }
 
         console.log("Coding node reached max iterations");

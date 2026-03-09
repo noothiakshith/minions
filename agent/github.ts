@@ -8,7 +8,7 @@ export const transport = new StdioClientTransport({
     args: ["-y", "@modelcontextprotocol/server-github"],
     env: {
         ...process.env,
-        GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_PAT || "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"
+        GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN || process.env.GITHUB_PAT || ""
     } as Record<string, string>
 });
 

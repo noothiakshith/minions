@@ -7,7 +7,7 @@ const transport = new StdioClientTransport({
   args: ["-y", "@modelcontextprotocol/server-github"],
   env: {
     ...process.env,
-    GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_PAT || "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"
+    GITHUB_PERSONAL_ACCESS_TOKEN: process.env.GITHUB_TOKEN || process.env.GITHUB_PAT || ""
   } as Record<string, string>
 });
 
@@ -25,7 +25,7 @@ async function fetchDirRecursive(owner: string, repo: string, dirPath: string, d
     });
     const contentArr = (res as any).content;
     if (!contentArr || !contentArr[0] || !contentArr[0].text) return [];
-    
+
     const items = JSON.parse(contentArr[0].text);
     if (Array.isArray(items)) {
       let paths: string[] = [];

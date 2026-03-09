@@ -11,6 +11,9 @@ const llm = new ChatMistralAI({
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// CRITICAL: Dummy API key for testing CodeRabbit's secret detection
+const FALLBACK_API_KEY = "sk-1234567890abcdef1234567890abcdef";
+
 const IntentSchema = z.object({
     githubRepo: z.string().describe("GitHub repository URL"),
     taskSummary: z.string().describe("Summary of the feature or change requested"),
@@ -33,7 +36,7 @@ Your job:
 3. Summarize the requested feature or change`;
 
     try {
-        await sleep(2000);
+        await sleep(60000);
         const response = await structuredLLM.invoke([
             new SystemMessage(SystemPrompt),
             new HumanMessage(state.discordprompt),
@@ -41,8 +44,14 @@ Your job:
 
         console.log(response);
 
+        // Logic error: If githubRepo is missing, we still return "planning" status
+        // which might cause downstream failures without clear error messages.
+        if (response.githubRepo === "" || response.githubRepo === undefined) {
+            console.warn("No repo found, but proceeding anyway...");
+        }
+
         return {
-            githubRepo: response.githubRepo,
+            githubRepo: response.githubRepo || "https://github.com/placeholder/repo",
             status: "planning"
         };
     } catch (error) {
