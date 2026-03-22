@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Events } from 'discord.js';
 import * as dotenv from 'dotenv';
-import { app } from './agent/main'
+import { app } from './agent/main';
 import 'dotenv/config';
 import { Sandbox } from '@e2b/code-interpreter';
 
@@ -34,36 +34,52 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     const statusMessage = await message.reply("🛠️ **Minion Task Received.** Initializing MCP Hydration...");
-    const sandbox = await Sandbox.create("akshith-dev", {
-        envs: {
-            GITHUB_TOKEN: process.env.GITHUB_PAT!,
-            MISTRAL_API_KEY: process.env.MISTRAL_API_KEY!,
-        }
-    });
-    const sandboxId = sandbox.sandboxId;
-    console.log(` Sandbox Created: ${sandboxId}`);
-    message.reply(`The sandbox of id ${sandboxId} has been created`);
+    
+    try {
+        const sandbox = await Sandbox.create("akshith-dev", {
+            envs: {
+                GITHUB_TOKEN: process.env.GITHUB_PAT!,
+                MISTRAL_API_KEY: process.env.MISTRAL_API_KEY!,
+            },
+            onStdout: (output) => {
+                console.log(`Sandbox stdout: ${output.line}`);
+                message.channel.send(`[Sandbox Output] ${output.line}`);
+            },
+            onStderr: (error) => {
+                console.error(`Sandbox stderr: ${error.line}`);
+                message.channel.send(`[Sandbox Error] ${error.line}`);
+            }
+        });
+        
+        const sandboxId = sandbox.sandboxId;
+        console.log(`Sandbox Created: ${sandboxId}`);
+        await message.reply(`The sandbox of id ${sandboxId} has been created`);
 
-    const responseState = await app.invoke({
-        discordprompt: prompt,
-        taskSummary: "",
-        githubRepo: "",
-        hydrated_context: {
-            task: "",
-            repo: "",
-            owner: "",
-            relevantFiles: [],
-            fileContents: {}
-        },
-        execution_plan: {
-            steps: []
-        },
-        retry_count: 0,
-        status: "intent",
-        sandboxId: sandboxId
-    });
-
-
+        const responseState = await app.invoke({
+            discordprompt: prompt,
+            taskSummary: "",
+            githubRepo: "",
+            hydrated_context: {
+                task: "",
+                repo: "",
+                owner: "",
+                relevantFiles: [],
+                fileContents: {}
+            },
+            execution_plan: {
+                steps: []
+            },
+            retry_count: 0,
+            status: "intent",
+            sandboxId: sandboxId
+        });
+        
+        // Log the response state for debugging
+        console.log("Response State:", responseState);
+    } catch (error) {
+        console.error("Error in processing:", error);
+        await message.reply("❌ **Error occurred while processing your request.** Please check the logs.");
+    }
 });
 
 client.login(process.env.DISCORD_TOKEN);
